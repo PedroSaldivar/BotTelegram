@@ -50,10 +50,12 @@ application.add_handler(conv_handler)
 application.add_handler(MessageHandler(filters.Regex(r"(?i)pagar"), handle_pagar))
 application.add_error_handler(error_handler)
 
-# Inicializa y arranca la aplicación en segundo plano
-loop = asyncio.get_event_loop()
-loop.create_task(application.initialize())
-loop.create_task(application.start())
+# ----- Inicializar Telegram en segundo plano -----
+async def init_telegram():
+    await application.initialize()
+    await application.start()
+
+asyncio.run(init_telegram())
 
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
