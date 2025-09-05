@@ -50,12 +50,16 @@ application.add_handler(conv_handler)
 application.add_handler(MessageHandler(filters.Regex(r"(?i)pagar"), handle_pagar))
 application.add_error_handler(error_handler)
 
+# ----- Inicializar Application al arrancar -----
+loop = asyncio.get_event_loop()
+loop.run_until_complete(application.initialize())
+loop.run_until_complete(application.start())
+
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    # Ejecuta directamente el handler en un loop temporal
-    asyncio.run(application.process_update(update))
+    loop.create_task(application.process_update(update))
     return "OK", 200
 
 @app.route("/", methods=["GET"])
