@@ -1,4 +1,5 @@
 import os
+import asyncio
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import (
@@ -53,8 +54,8 @@ application.add_error_handler(error_handler)
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    # Ejecuta el procesamiento en el loop async del bot
-    application.create_task(application.process_update(update))
+    loop = asyncio.get_event_loop()
+    loop.create_task(application.process_update(update))
     return "OK", 200
 
 @app.route("/", methods=["GET"])
@@ -65,4 +66,3 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
