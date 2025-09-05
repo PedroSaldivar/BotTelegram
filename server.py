@@ -65,7 +65,8 @@ threading.Thread(target=init_bot, daemon=True).start()
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    asyncio.run(application.process_update(update))
+    loop = asyncio.get_event_loop()
+    loop.create_task(application.process_update(update))
     return "OK", 200
 
 @app.route("/", methods=["GET"])
@@ -76,3 +77,4 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
