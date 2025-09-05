@@ -1,3 +1,29 @@
+# Carpetas de entorno virtual
 venv/
-__pycache__/
+ENV/
+env/
+.venv/
+
+# Archivos de configuración locales
+*.env
 .env
+
+# Archivos de caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos temporales de editores
+*.log
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Archivos de VSCode / PyCharm
+.vscode/
+.idea/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
