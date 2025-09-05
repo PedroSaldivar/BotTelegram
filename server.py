@@ -51,10 +51,10 @@ application.add_error_handler(error_handler)
 
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
-async def webhook():
-    """Recibe actualizaciones de Telegram y las procesa con PTB"""
+def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    await application.process_update(update)
+    # Ejecuta el procesamiento en el loop async del bot
+    application.create_task(application.process_update(update))
     return "OK", 200
 
 @app.route("/", methods=["GET"])
@@ -65,3 +65,4 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
