@@ -52,21 +52,16 @@ application.add_error_handler(error_handler)
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
 async def webhook():
-    """Recibe actualizaciones de Telegram y las procesa con PTB v21"""
+    """Recibe actualizaciones de Telegram y las procesa con PTB"""
     update = Update.de_json(request.get_json(force=True), application.bot)
     await application.process_update(update)
-    return "OK"
+    return "OK", 200
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
-    return "Bot de Aguas de Lourdes corriendo en Render 🚀"
+    return "Bot de Aguas de Lourdes corriendo en Render 🚀", 200
 
 # Arranque de Flask
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    # Inicializa PTB en modo webhook (sin servidor propio, usamos Flask)
-    application.run_webhook(
-        listen="0.0.0.0",
-        port=port,
-        webhook_url=f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{TOKEN}",
-    )
+    app.run(host="0.0.0.0", port=port)
