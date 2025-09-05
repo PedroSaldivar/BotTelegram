@@ -1,5 +1,6 @@
 import os
 import asyncio
+import threading
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import (
@@ -50,16 +51,21 @@ application.add_handler(conv_handler)
 application.add_handler(MessageHandler(filters.Regex(r"(?i)pagar"), handle_pagar))
 application.add_error_handler(error_handler)
 
-# ----- Inicializar Application al arrancar -----
-loop = asyncio.get_event_loop()
-loop.run_until_complete(application.initialize())
-loop.run_until_complete(application.start())
+# ----- Inicialización del Application en un hilo separado -----
+def init_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(application.initialize())
+    loop.run_until_complete(application.start())
+    loop.run_forever()
+
+threading.Thread(target=init_bot, daemon=True).start()
 
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    loop.create_task(application.process_update(update))
+    asyncio.run(application.process_update(update))
     return "OK", 200
 
 @app.route("/", methods=["GET"])
