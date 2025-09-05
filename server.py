@@ -27,8 +27,13 @@ from bot import (
 app = Flask(__name__)
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Crea la aplicación de Telegram
-application = Application.builder().token(TOKEN).build()
+# Crea la aplicación de Telegram con timeout extendido
+application = (
+    Application.builder()
+    .token(TOKEN)
+    .get_updates_request_kwargs({"timeout": 20})
+    .build()
+)
 
 # ----- Handlers -----
 conv_handler = ConversationHandler(
@@ -51,22 +56,22 @@ application.add_handler(conv_handler)
 application.add_handler(MessageHandler(filters.Regex(r"(?i)pagar"), handle_pagar))
 application.add_error_handler(error_handler)
 
-# ----- Inicialización del Application en un hilo separado -----
-def init_bot():
+# ----- Loop global en un thread -----
+def run_loop():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(application.initialize())
     loop.run_until_complete(application.start())
     loop.run_forever()
 
-threading.Thread(target=init_bot, daemon=True).start()
+threading.Thread(target=run_loop, daemon=True).start()
 
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    loop = asyncio.get_event_loop()
-    loop.create_task(application.process_update(update))
+    # Enviar el update al loop global
+    asyncio.run_coroutine_threadsafe(application.process_update(update), application.bot.loop)
     return "OK", 200
 
 @app.route("/", methods=["GET"])
@@ -77,4 +82,3 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
