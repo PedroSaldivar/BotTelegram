@@ -1,12 +1,30 @@
 import os
-import json
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
-from dotenv import load_dotenv
+from flask import Flask, request
+from telegram import Update
+from telegram.ext import Application
 
-# Cargar variables de entorno
-load_dotenv()
-TOKEN = os.getenv('BOT_TOKEN')
+from bot import main  # importa tu lógica de handlers, pero sin run_polling()
+
+app = Flask(__name__)
+TOKEN = os.getenv("BOT_TOKEN")
+
+# Crea la aplicación global
+application = Application.builder().token(TOKEN).build()
+
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    # En lugar de Updater, ahora en v20 usamos la cola de updates
+    application.update_queue.put(update)
+    return "OK"
+
+@app.route("/")
+def index():
+    return "Bot de Aguas de Lourdes corriendo en Render 🚀"
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
 # Estados de conversación
 (
@@ -528,4 +546,8 @@ def main():
     app.run_polling()
 
 if __name__ == '__main__':
-    main()
+    # Solo si quieres probar local con polling
+    from telegram.ext import Application
+    application = Application.builder().token(TOKEN).build()
+    # aquí puedes añadir los handlers igual que en main()
+    application.run_polling()
