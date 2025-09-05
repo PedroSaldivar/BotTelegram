@@ -28,12 +28,7 @@ app = Flask(__name__)
 TOKEN = os.getenv("BOT_TOKEN")
 
 # Crea la aplicación de Telegram con timeout extendido
-application = (
-    Application.builder()
-    .token(TOKEN)
-    .get_updates_request_kwargs({"timeout": 20})
-    .build()
-)
+application = Application.builder().token(TOKEN).build()
 
 # ----- Handlers -----
 conv_handler = ConversationHandler(
@@ -82,3 +77,4 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
