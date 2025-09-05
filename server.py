@@ -8,7 +8,7 @@ from telegram.ext import (
     ConversationHandler, filters
 )
 
-# Importa todas tus funciones del bot
+# Importa tus funciones del bot
 from bot import (
     start, handle_menu, handle_seleccion_producto, handle_cantidad,
     handle_datos_envio, handle_metodo_pago, handle_confirmacion,
@@ -27,7 +27,7 @@ from bot import (
 app = Flask(__name__)
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Crea la aplicación de Telegram con timeout extendido
+# Crea la aplicación de Telegram
 application = Application.builder().token(TOKEN).build()
 
 # ----- Handlers -----
@@ -51,9 +51,10 @@ application.add_handler(conv_handler)
 application.add_handler(MessageHandler(filters.Regex(r"(?i)pagar"), handle_pagar))
 application.add_error_handler(error_handler)
 
-# ----- Loop global en un thread -----
+# ----- Loop global en thread -----
+loop = asyncio.new_event_loop()
+
 def run_loop():
-    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(application.initialize())
     loop.run_until_complete(application.start())
@@ -65,8 +66,7 @@ threading.Thread(target=run_loop, daemon=True).start()
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    # Enviar el update al loop global
-    asyncio.run_coroutine_threadsafe(application.process_update(update), application.bot.loop)
+    asyncio.run_coroutine_threadsafe(application.process_update(update), loop)
     return "OK", 200
 
 @app.route("/", methods=["GET"])
@@ -77,4 +77,3 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
