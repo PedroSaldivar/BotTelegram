@@ -1,5 +1,4 @@
 import os
-import asyncio
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import (
@@ -50,18 +49,12 @@ application.add_handler(conv_handler)
 application.add_handler(MessageHandler(filters.Regex(r"(?i)pagar"), handle_pagar))
 application.add_error_handler(error_handler)
 
-# ----- Inicializar Telegram en segundo plano -----
-async def init_telegram():
-    await application.initialize()
-    await application.start()
-
-asyncio.run(init_telegram())
-
 # ----- Rutas de Flask -----
 @app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
+async def webhook():
+    """Recibe actualizaciones de Telegram y las procesa con PTB v21"""
     update = Update.de_json(request.get_json(force=True), application.bot)
-    application.update_queue.put(update)
+    await application.process_update(update)
     return "OK"
 
 @app.route("/")
@@ -71,4 +64,9 @@ def index():
 # Arranque de Flask
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    # Inicializa PTB en modo webhook (sin servidor propio, usamos Flask)
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        webhook_url=f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{TOKEN}",
+    )
