@@ -15,7 +15,7 @@ from bot import (
     cancel, error_handler, handle_pagar
 )
 
-# Estados de conversación (los mismos que en bot.py)
+# Estados de conversación
 (
     MENU, COMPRA, SELECCION_PRODUCTO, CANTIDAD,
     DATOS_ENVIO, METODO_PAGO, CONFIRMACION,
@@ -29,7 +29,7 @@ TOKEN = os.getenv("BOT_TOKEN")
 # Crea la aplicación de Telegram
 application = Application.builder().token(TOKEN).build()
 
-# ----- Handlers principales -----
+# ----- Handlers -----
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
     states={
@@ -54,15 +54,15 @@ application.add_error_handler(error_handler)
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    loop = asyncio.get_event_loop()
-    loop.create_task(application.process_update(update))
+    # Ejecuta directamente el handler en un loop temporal
+    asyncio.run(application.process_update(update))
     return "OK", 200
 
 @app.route("/", methods=["GET"])
 def index():
     return "Bot de Aguas de Lourdes corriendo en Render 🚀", 200
 
-# Arranque de Flask
+# Arranque
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
